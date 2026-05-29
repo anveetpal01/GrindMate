@@ -201,9 +201,7 @@ class TestPasswordReset:
 
     def test_request_for_unknown_email_is_silent(self, client):
         mail.outbox.clear()
-        response = client.post(
-            self.request_url, {"email": "ghost@nope.test"}, format="json"
-        )
+        response = client.post(self.request_url, {"email": "ghost@nope.test"}, format="json")
         assert response.status_code == status.HTTP_202_ACCEPTED
         assert PasswordResetToken.objects.count() == 0
         assert mail.outbox == []

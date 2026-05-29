@@ -97,9 +97,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 .first()
             )
             if replacement is None:
-                replacement = (
-                    group.memberships.exclude(user=self).order_by("joined_at").first()
-                )
+                replacement = group.memberships.exclude(user=self).order_by("joined_at").first()
                 if replacement is not None:
                     replacement.role = GroupMembership.ROLE_ADMIN
                     replacement.save(update_fields=["role"])

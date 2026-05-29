@@ -140,9 +140,7 @@ class ResendVerificationView(APIView):
         user = User.objects.filter(email__iexact=email, is_email_verified=False).first()
         if user is not None:
             token = EmailVerificationToken.objects.create(user=user)
-            verify_link = (
-                f"{settings.FRONTEND_URL.rstrip('/')}/verify-email?token={token.token}"
-            )
+            verify_link = f"{settings.FRONTEND_URL.rstrip('/')}/verify-email?token={token.token}"
             send_mail(
                 subject="GrindMate - verify your email",
                 message=(
@@ -180,9 +178,7 @@ class PasswordResetRequestView(APIView):
         user = User.objects.filter(email__iexact=email, is_active=True).first()
         if user is not None:
             token = PasswordResetToken.objects.create(user=user)
-            reset_link = (
-                f"{settings.FRONTEND_URL.rstrip('/')}/reset-password/{token.token}"
-            )
+            reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password/{token.token}"
             send_mail(
                 subject="GrindMate - reset your password",
                 message=(

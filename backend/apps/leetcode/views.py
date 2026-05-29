@@ -196,7 +196,9 @@ class CronBackfillProblemsView(APIView):
             limit = self.DEFAULT_LIMIT
         limit = max(1, min(limit, 100))
 
-        pending = list(Problem.objects.filter(difficulty="").values_list("title_slug", flat=True)[:limit])
+        pending = list(
+            Problem.objects.filter(difficulty="").values_list("title_slug", flat=True)[:limit]
+        )
         if not pending:
             return Response({"backfilled": 0, "failed": 0, "total": 0})
 
@@ -211,7 +213,9 @@ class CronBackfillProblemsView(APIView):
                 logger.info("Backfill skipped slug=%s: %s", slug, exc)
                 failed += 1
 
-        logger.info("Backfill done: %d ok, %d failed, %d remaining-batch", backfilled, failed, len(pending))
+        logger.info(
+            "Backfill done: %d ok, %d failed, %d remaining-batch", backfilled, failed, len(pending)
+        )
         return Response({"backfilled": backfilled, "failed": failed, "total": len(pending)})
 
 

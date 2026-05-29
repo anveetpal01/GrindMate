@@ -84,7 +84,9 @@ class TestUserDeletionReassignsOwnedGroups:
         other_admin = UserFactory()
         group = GroupFactory(owner=owner)  # adds owner as admin member
         GroupMembership.objects.create(
-            group=group, user=other_admin, role=GroupMembership.ROLE_ADMIN,
+            group=group,
+            user=other_admin,
+            role=GroupMembership.ROLE_ADMIN,
         )
 
         owner.delete()
@@ -101,7 +103,9 @@ class TestUserDeletionReassignsOwnedGroups:
         member = UserFactory()
         group = GroupFactory(owner=owner)
         GroupMembership.objects.create(
-            group=group, user=member, role=GroupMembership.ROLE_MEMBER,
+            group=group,
+            user=member,
+            role=GroupMembership.ROLE_MEMBER,
         )
 
         owner.delete()

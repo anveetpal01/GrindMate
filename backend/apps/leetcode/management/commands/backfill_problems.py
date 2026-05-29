@@ -43,8 +43,9 @@ class Command(BaseCommand):
             slugs = [options["slug"]]
         else:
             slugs = list(
-                Problem.objects.filter(difficulty="")
-                .values_list("title_slug", flat=True)[: options["limit"]]
+                Problem.objects.filter(difficulty="").values_list("title_slug", flat=True)[
+                    : options["limit"]
+                ]
             )
 
         if not slugs:
