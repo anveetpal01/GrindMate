@@ -1,0 +1,34 @@
+# Triggers a LeetCode sync for every linked account every 6 hours.
+# Replaces a Celery Beat worker on the free tier (Render free has no worker dyno).
+#
+# Required GitHub repo secrets:
+#   API_BASE_URL        e.g. https://grindmate-api.onrender.com
+#   CRON_SHARED_SECRET  same value set on the Render service
+name: Scheduled LeetCode sync
+
+on:
+  schedule:
+    # Every 6 hours (UTC).  Cron times on GitHub are best-effort - actual
+    # firing can be delayed by 5–15 min during peak load. Good enough.
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}  # lets you trigger it manually from the Actions tab
+
+jobs:
+  trigger-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit the cron sync endpoint
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          CRON_SHARED_SECRET: ${{ secrets.CRON_SHARED_SECRET }}
+        run: |
+          if [ -z "$API_BASE_URL" ] || [ -z "$CRON_SHARED_SECRET" ]; then
+            echo "Set API_BASE_URL and CRON_SHARED_SECRET as repo secrets first."
+            exit 1
+          fi
+          # --max-time prevents a hung backend from burning the whole job slot.
+          # The sync endpoint runs synchronously and may take a minute for many accounts.
+          curl --silent --show-error --fail --max-time 120 \
+            -X POST "$API_BASE_URL/api/v1/leetcode/cron/sync-all/" \
+            -H "X-Cron-Token: $CRON_SHARED_SECRET" \
+            -H "Content-Type: application/json"

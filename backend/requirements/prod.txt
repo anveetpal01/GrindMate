@@ -1,0 +1,4 @@
+-r base.txt
+
+# --- Observability -----------------------------------------
+sentry-sdk[django]~=2.14.0

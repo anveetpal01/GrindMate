@@ -1,0 +1,22 @@
+"""Celery app - auto-discovers tasks from each installed app.
+
+Workers:    celery -A grindmate worker -l info
+Beat:       celery -A grindmate beat -l info
+"""
+
+from __future__ import annotations
+
+import os
+
+from celery import Celery
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "grindmate.settings.development")
+
+app = Celery("grindmate")
+app.config_from_object("django.conf:settings", namespace="CELERY")
+app.autodiscover_tasks()
+
+
+@app.task(bind=True, ignore_result=True)
+def debug_task(self) -> None:
+    print(f"Request: {self.request!r}")

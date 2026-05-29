@@ -1,0 +1,66 @@
+# --- Python / Django --------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache
+.mypy_cache/
+.ruff_cache/
+*.log
+celerybeat-schedule
+celerybeat.pid
+
+# Django
+*.sqlite3
+*.sqlite3-journal
+media/
+staticfiles/
+local_settings.py
+
+# --- Node / React -----------------------------------------------------
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+.next/
+.turbo/
+*.local
+.eslintcache
+
+# --- Env / Secrets ----------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*credentials*
+.claude/
+
+# --- Editors / OS -----------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Build artifacts --------------------------------------------------
+*.tsbuildinfo
+coverage/
+.nyc_output/

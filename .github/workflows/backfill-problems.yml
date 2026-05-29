@@ -1,0 +1,32 @@
+# Backfills LeetCode Problem metadata for placeholder rows created by the
+# deferred-sync path. Runs nightly so the leaderboard's difficulty-weighted
+# score catches up within ~24h of a new slug being logged.
+#
+# Required GitHub repo secrets:
+#   API_BASE_URL        same as scheduled-sync workflow
+#   CRON_SHARED_SECRET  same value as Render env var
+name: Backfill LeetCode problems
+
+on:
+  schedule:
+    # 03:00 UTC daily (off-peak; avoids overlapping with the 6h sync windows).
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  trigger-backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit the backfill endpoint
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          CRON_SHARED_SECRET: ${{ secrets.CRON_SHARED_SECRET }}
+        run: |
+          if [ -z "$API_BASE_URL" ] || [ -z "$CRON_SHARED_SECRET" ]; then
+            echo "Set API_BASE_URL and CRON_SHARED_SECRET as repo secrets first."
+            exit 1
+          fi
+          curl --silent --show-error --fail --max-time 90 \
+            -X POST "$API_BASE_URL/api/v1/leetcode/cron/backfill-problems/?limit=50" \
+            -H "X-Cron-Token: $CRON_SHARED_SECRET" \
+            -H "Content-Type: application/json"

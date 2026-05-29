@@ -1,0 +1,65 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["migrations", "staticfiles", "media"]
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "B",    # flake8-bugbear
+  "UP",   # pyupgrade
+  "DJ",   # flake8-django
+  "SIM",  # flake8-simplify
+  "RUF",  # ruff-specific
+]
+ignore = [
+  "E501",    # line length is enforced by formatter
+  "DJ001",   # null=True on string fields - sometimes intentional
+  "RUF012",  # Django Meta class lists/dicts are not ClassVar by convention
+  "RUF003",  # multiplication sign in comments is intentional
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/*.py" = ["E", "F", "I", "B", "UP", "DJ", "SIM", "RUF"]
+"**/tests/**" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "grindmate.settings.test"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+addopts = [
+  "--strict-markers",
+  "--reuse-db",
+  "-ra",
+]
+filterwarnings = [
+  "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["apps", "grindmate"]
+omit = [
+  "*/migrations/*",
+  "*/tests/*",
+  "*/test_*.py",
+  "manage.py",
+  "*/asgi.py",
+  "*/wsgi.py",
+]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+show_missing = true
+skip_covered = false
