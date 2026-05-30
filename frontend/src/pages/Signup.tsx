@@ -8,6 +8,7 @@ import { Trophy } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 import {
   Card,
@@ -149,9 +150,8 @@ export function SignupPage() {
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="new-password"
                 {...register("password")}
               />
@@ -162,9 +162,8 @@ export function SignupPage() {
 
             <div className="space-y-2">
               <Label htmlFor="password_confirm">Confirm password</Label>
-              <Input
+              <PasswordInput
                 id="password_confirm"
-                type="password"
                 autoComplete="new-password"
                 {...register("password_confirm")}
               />

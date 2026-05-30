@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 import {
   Card,
@@ -133,10 +134,17 @@ export function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-muted-foreground hover:text-primary hover:underline"
+                >
+                  Forgot?
+                </Link>
+              </div>
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="current-password"
                 {...register("password")}
               />

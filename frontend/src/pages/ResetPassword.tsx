@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Label } from "@/components/ui/Label";
 import {
   Card,
@@ -76,9 +76,8 @@ export function ResetPasswordPage() {
             )}
             <div className="space-y-2">
               <Label htmlFor="new_password">New password</Label>
-              <Input
+              <PasswordInput
                 id="new_password"
-                type="password"
                 autoComplete="new-password"
                 {...register("new_password")}
               />
@@ -88,9 +87,8 @@ export function ResetPasswordPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirm password</Label>
-              <Input
+              <PasswordInput
                 id="confirm"
-                type="password"
                 autoComplete="new-password"
                 {...register("confirm")}
               />
