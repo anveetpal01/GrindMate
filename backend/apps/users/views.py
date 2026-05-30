@@ -141,18 +141,21 @@ class ResendVerificationView(APIView):
         if user is not None:
             token = EmailVerificationToken.objects.create(user=user)
             verify_link = f"{settings.FRONTEND_URL.rstrip('/')}/verify-email?token={token.token}"
-            send_mail(
-                subject="GrindMate - verify your email",
-                message=(
-                    f"Hi {user.name},\n\n"
-                    f"Verify your email to start using GrindMate:\n{verify_link}\n\n"
-                    "This link expires in 24 hours."
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
-            logger.info("Resent verification token for user_id=%s", user.id)
+            try:
+                send_mail(
+                    subject="GrindMate - verify your email",
+                    message=(
+                        f"Hi {user.name},\n\n"
+                        f"Verify your email to start using GrindMate:\n{verify_link}\n\n"
+                        "This link expires in 24 hours."
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+                logger.info("Resent verification token for user_id=%s", user.id)
+            except Exception as exc:
+                logger.error("Failed to resend verification to %s: %s", user.email, exc)
 
         return Response(
             {"detail": "If that email belongs to an unverified account, a new link is on the way."},
@@ -179,18 +182,21 @@ class PasswordResetRequestView(APIView):
         if user is not None:
             token = PasswordResetToken.objects.create(user=user)
             reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password/{token.token}"
-            send_mail(
-                subject="GrindMate - reset your password",
-                message=(
-                    f"Hi {user.name},\n\n"
-                    f"Reset your GrindMate password:\n{reset_link}\n\n"
-                    "This link expires in 1 hour. If you didn't request this, ignore the email."
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
-            logger.info("Issued password reset token for user_id=%s", user.id)
+            try:
+                send_mail(
+                    subject="GrindMate - reset your password",
+                    message=(
+                        f"Hi {user.name},\n\n"
+                        f"Reset your GrindMate password:\n{reset_link}\n\n"
+                        "This link expires in 1 hour. If you didn't request this, ignore the email."
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+                logger.info("Issued password reset token for user_id=%s", user.id)
+            except Exception as exc:
+                logger.error("Failed to send password reset to %s: %s", user.email, exc)
 
         return Response(
             {"detail": "If that email exists, a reset link is on the way."},

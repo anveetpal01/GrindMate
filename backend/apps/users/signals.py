@@ -29,15 +29,20 @@ def issue_email_verification(sender, instance: User, created: bool, **kwargs) ->
 
     logger.info("Issued email verification token for user_id=%s", instance.id)
 
-    send_mail(
-        subject="Welcome to GrindMate - verify your email",
-        message=(
-            f"Hi {instance.name},\n\n"
-            f"Click the link below to verify your email and start grinding:\n"
-            f"{verify_link}\n\n"
-            "This link expires in 24 hours."
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[instance.email],
-        fail_silently=False,
-    )
+    try:
+        send_mail(
+            subject="Welcome to GrindMate - verify your email",
+            message=(
+                f"Hi {instance.name},\n\n"
+                f"Click the link below to verify your email and start grinding:\n"
+                f"{verify_link}\n\n"
+                "This link expires in 24 hours."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[instance.email],
+            fail_silently=False,
+        )
+    except Exception as exc:
+        # Don't block signup if SMTP is down/misconfigured. User can request
+        # a fresh link via /auth/resend-verification/ once email works.
+        logger.error("Failed to send verification email to %s: %s", instance.email, exc)
