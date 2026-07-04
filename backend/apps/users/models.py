@@ -119,10 +119,22 @@ class User(AbstractBaseUser, PermissionsMixin):
         return super().delete(*args, **kwargs)
 
 
+def generate_otp() -> str:
+    """6-digit numeric code, zero-padded (e.g. '042317')."""
+    return f"{secrets.randbelow(1_000_000):06d}"
+
+
 class EmailVerificationToken(models.Model):
-    """Single-use signup verification token. Expires after 24h."""
+    """Single-use signup verification token. Expires after 24h.
+
+    Carries both a long `token` (link flow) and a short `otp` (typed into the
+    verify screen right after signup). `attempts` guards the 6-digit OTP
+    against brute force - after MAX_ATTEMPTS the token is dead and the user
+    must request a fresh code.
+    """
 
     EXPIRY = timedelta(hours=24)
+    MAX_ATTEMPTS = 5
 
     user = models.ForeignKey(
         User,
@@ -130,6 +142,8 @@ class EmailVerificationToken(models.Model):
         related_name="email_verification_tokens",
     )
     token = models.CharField(max_length=64, unique=True, default=secrets.token_urlsafe)
+    otp = models.CharField(max_length=6, default=generate_otp)
+    attempts = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     used_at = models.DateTimeField(null=True, blank=True)
 
@@ -143,11 +157,20 @@ class EmailVerificationToken(models.Model):
         return django_tz.now() > self.created_at + self.EXPIRY
 
     def is_usable(self) -> bool:
-        return self.used_at is None and not self.is_expired()
+        return (
+            self.used_at is None
+            and not self.is_expired()
+            and self.attempts < self.MAX_ATTEMPTS
+        )
 
     def consume(self) -> None:
         self.used_at = django_tz.now()
         self.save(update_fields=["used_at"])
+
+    def record_failed_attempt(self) -> None:
+        self.attempts = models.F("attempts") + 1
+        self.save(update_fields=["attempts"])
+        self.refresh_from_db(fields=["attempts"])
 
 
 class PasswordResetToken(models.Model):

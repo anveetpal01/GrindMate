@@ -24,6 +24,7 @@ from .serializers import (
     RegisterSerializer,
     ResendVerificationSerializer,
     UserSerializer,
+    VerifyOtpSerializer,
 )
 
 User = get_user_model()
@@ -122,6 +123,59 @@ class VerifyEmailView(APIView):
         return Response({"detail": "Email verified."})
 
 
+class VerifyOtpView(APIView):
+    """POST /api/v1/auth/verify-otp/ - verify email with the 6-digit code.
+
+    On success the user is verified AND logged in: the response carries JWT
+    tokens + the user object, so the frontend can land straight on the
+    dashboard after signup (no separate login step).
+    """
+
+    permission_classes = (permissions.AllowAny,)
+    throttle_classes = (ScopedRateThrottle,)
+    throttle_scope = "verify_email"
+
+    def post(self, request, *_args, **_kwargs):
+        serializer = VerifyOtpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+        user = User.objects.filter(email__iexact=email).first()
+        if user is None:
+            return Response({"detail": "Invalid code."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.is_email_verified:
+            return Response(
+                {"detail": "Email already verified. Please log in."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        token = user.email_verification_tokens.order_by("-created_at").first()
+        if token is None or not token.is_usable():
+            return Response(
+                {"detail": "Code expired or too many attempts. Request a new one."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if token.otp != serializer.validated_data["otp"]:
+            token.record_failed_attempt()
+            return Response({"detail": "Invalid code."}, status=status.HTTP_400_BAD_REQUEST)
+
+        token.consume()
+        user.is_email_verified = True
+        user.save(update_fields=["is_email_verified"])
+        logger.info("Email verified via OTP for user_id=%s", user.id)
+
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": UserSerializer(user).data,
+            }
+        )
+
+
 class ResendVerificationView(APIView):
     """POST /api/v1/auth/resend-verification/ - send a fresh verification link.
 
@@ -146,8 +200,10 @@ class ResendVerificationView(APIView):
                     subject="GrindMate - verify your email",
                     message=(
                         f"Hi {user.name},\n\n"
-                        f"Verify your email to start using GrindMate:\n{verify_link}\n\n"
-                        "This link expires in 24 hours."
+                        f"Your verification code is: {token.otp}\n\n"
+                        f"Enter it on the verify screen, or click the link below:\n"
+                        f"{verify_link}\n\n"
+                        "The code and link expire in 24 hours."
                     ),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],

@@ -90,6 +90,11 @@ class EmailVerifySerializer(serializers.Serializer):
     token = serializers.CharField(max_length=128)
 
 
+class VerifyOtpSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.RegexField(r"^\d{6}$", error_messages={"invalid": "Enter the 6-digit code."})
+
+
 class ResendVerificationSerializer(serializers.Serializer):
     email = serializers.EmailField()
 

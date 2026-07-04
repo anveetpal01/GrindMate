@@ -154,6 +154,94 @@ class TestVerifyEmail:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+class TestVerifyOtp:
+    url = reverse("v1:users:verify_otp")
+
+    def test_valid_otp_verifies_and_logs_in(self, client):
+        unverified = UserFactory(is_email_verified=False)
+        token = EmailVerificationToken.objects.create(user=unverified)
+
+        response = client.post(
+            self.url, {"email": unverified.email, "otp": token.otp}, format="json"
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert "access" in body
+        assert "refresh" in body
+        assert body["user"]["username"] == unverified.username
+
+        unverified.refresh_from_db()
+        token.refresh_from_db()
+        assert unverified.is_email_verified
+        assert token.used_at is not None
+
+    def test_wrong_otp_rejected_and_counted(self, client):
+        unverified = UserFactory(is_email_verified=False)
+        token = EmailVerificationToken.objects.create(user=unverified, otp="111111")
+
+        response = client.post(
+            self.url, {"email": unverified.email, "otp": "222222"}, format="json"
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        token.refresh_from_db()
+        assert token.attempts == 1
+        unverified.refresh_from_db()
+        assert not unverified.is_email_verified
+
+    def test_otp_locked_after_max_attempts(self, client):
+        unverified = UserFactory(is_email_verified=False)
+        token = EmailVerificationToken.objects.create(user=unverified, otp="111111")
+
+        for _ in range(EmailVerificationToken.MAX_ATTEMPTS):
+            client.post(self.url, {"email": unverified.email, "otp": "222222"}, format="json")
+
+        # Correct code no longer works - token burned by brute-force guard.
+        response = client.post(
+            self.url, {"email": unverified.email, "otp": "111111"}, format="json"
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        token.refresh_from_db()
+        assert not token.is_usable()
+
+    def test_latest_token_wins_after_resend(self, client):
+        unverified = UserFactory(is_email_verified=False)
+        old = EmailVerificationToken.objects.create(user=unverified, otp="111111")
+        EmailVerificationToken.objects.create(user=unverified, otp="333333")
+
+        # Old code is dead once a new one is issued.
+        response = client.post(
+            self.url, {"email": unverified.email, "otp": old.otp}, format="json"
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        response = client.post(
+            self.url, {"email": unverified.email, "otp": "333333"}, format="json"
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_already_verified_rejected(self, client, user):
+        response = client.post(
+            self.url, {"email": user.email, "otp": "123456"}, format="json"
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "already verified" in response.json()["detail"].lower()
+
+    def test_unknown_email_rejected_generically(self, client):
+        response = client.post(
+            self.url, {"email": "ghost@grindmate.test", "otp": "123456"}, format="json"
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()["detail"] == "Invalid code."
+
+    def test_malformed_otp_rejected(self, client):
+        unverified = UserFactory(is_email_verified=False)
+        response = client.post(
+            self.url, {"email": unverified.email, "otp": "12ab56"}, format="json"
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 class TestResendVerification:
     url = reverse("v1:users:resend_verification")
 

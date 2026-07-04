@@ -45,7 +45,6 @@ export function LoginPage() {
   });
 
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
-  const [resentBanner, setResentBanner] = useState<string | null>(null);
 
   const loginMutation = useMutation({
     mutationFn: async (input: LoginInput) => {
@@ -73,15 +72,14 @@ export function LoginPage() {
   const resendMutation = useMutation({
     mutationFn: async (email: string) =>
       api.post("/auth/resend-verification/", { email }),
-    onSuccess: () => {
-      setResentBanner("Verification email sent. Check your inbox (or spam).");
-      setUnverifiedEmail(null);
+    onSuccess: (_data, email) => {
+      // Fresh code is on its way - take them to the OTP screen to enter it.
+      navigate("/verify-otp", { state: { email } });
     },
   });
 
   const onSubmit = (input: LoginInput) => {
     setServerError(null);
-    setResentBanner(null);
     loginMutation.mutate(input);
   };
 
@@ -98,7 +96,6 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
-            {resentBanner && <Alert variant="success">{resentBanner}</Alert>}
             {serverError && (
               <Alert variant="destructive">
                 <div className="space-y-2">
@@ -111,8 +108,8 @@ export function LoginPage() {
                       disabled={resendMutation.isPending}
                     >
                       {resendMutation.isPending
-                        ? "Sending..."
-                        : "Resend verification email"}
+                        ? "Sending code..."
+                        : "Send a new code and verify now"}
                     </button>
                   )}
                 </div>

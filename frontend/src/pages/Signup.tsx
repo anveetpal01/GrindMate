@@ -42,7 +42,6 @@ type SignupInput = z.infer<typeof signupSchema>;
 export function SignupPage() {
   const navigate = useNavigate();
   const [serverErrors, setServerErrors] = useState<string[] | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const {
     register,
@@ -64,9 +63,8 @@ export function SignupPage() {
       const { data } = await api.post("/auth/register/", input);
       return data;
     },
-    onSuccess: () => {
-      setSuccess(true);
-      setTimeout(() => navigate("/login", { replace: true }), 1500);
+    onSuccess: (_data, variables) => {
+      navigate("/verify-otp", { replace: true, state: { email: variables.email } });
     },
     onError: (err: unknown) => {
       const data = (err as { response?: { data?: Record<string, unknown> } })
@@ -102,12 +100,6 @@ export function SignupPage() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
-            {success && (
-              <Alert variant="success">
-                Account created! Check your inbox to verify your email - redirecting
-                to login…
-              </Alert>
-            )}
             {serverErrors && (
               <Alert variant="destructive">
                 <ul className="list-disc pl-4 space-y-1">

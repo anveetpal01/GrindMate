@@ -34,9 +34,10 @@ def issue_email_verification(sender, instance: User, created: bool, **kwargs) ->
             subject="Welcome to GrindMate - verify your email",
             message=(
                 f"Hi {instance.name},\n\n"
-                f"Click the link below to verify your email and start grinding:\n"
+                f"Your verification code is: {token.otp}\n\n"
+                f"Enter it on the verify screen, or click the link below:\n"
                 f"{verify_link}\n\n"
-                "This link expires in 24 hours."
+                "The code and link expire in 24 hours."
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[instance.email],

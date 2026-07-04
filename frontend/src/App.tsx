@@ -3,6 +3,7 @@ import { LoginPage } from "@/pages/Login";
 import { SignupPage } from "@/pages/Signup";
 import { JoinPage } from "@/pages/Join";
 import { VerifyEmailPage } from "@/pages/VerifyEmail";
+import { VerifyOtpPage } from "@/pages/VerifyOtp";
 import { ForgotPasswordPage } from "@/pages/ForgotPassword";
 import { ResetPasswordPage } from "@/pages/ResetPassword";
 import { DashboardPage } from "@/pages/Dashboard";
@@ -19,6 +20,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/verify-otp" element={<VerifyOtpPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/join/:token" element={<JoinPage />} />
